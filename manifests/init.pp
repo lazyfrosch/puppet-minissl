@@ -37,4 +37,9 @@ class minissl {
     mode   => '0640',
   }
 
+  file { "${settings::vardir}/ssl/crl.pem":
+    source => 'puppet:///modules/minissl/ssl/ca/ca_crl.pem',
+    mode   => '0640',
+  }
+
 }
