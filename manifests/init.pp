@@ -10,7 +10,28 @@
 #
 # Markus Frosch <markus@lazyfrosch.de>
 #
-class minissl {
+class minissl(
+  $system = true,
+  $system_pki_dir = undef,
+) {
+
+  validate_bool($system)
+
+  if $system_pki_dir {
+    validate_absolute_path($system_pki_dir)
+    $system_pki_dir_rel = $system_pki_dir
+  }
+  else {
+    if $::osfamily == 'RedHat' {
+      $system_pki_dir_rel = '/etc/pki/tls'
+    }
+    elsif $::osfamily == 'Debian' {
+      $system_pki_dir_rel = '/etc/ssl'
+    }
+    else {
+      fail("Please supply \$system_pki_dir - not autodetected for osfamily '${::osfamily}'!")
+    }
+  }
 
   File {
     ensure => file,
@@ -42,4 +63,18 @@ class minissl {
     mode   => '0644',
   }
 
+  if $system {
+    file { "${system_pki_dir_rel}/certs/${::fqdn}_chain.crt":
+      source => "puppet:///modules/minissl/ssl/certs/${::fqdn}.pem",
+    }
+
+    file { "${system_pki_dir_rel}/certs/${::fqdn}.crt":
+      source => "puppet:///modules/minissl/ssl/certs/${::fqdn}.pem",
+    }
+
+    file { "${system_pki_dir_rel}/private/${::fqdn}.key":
+      source => "puppet:///modules/minissl/ssl/private_keys/${::fqdn}.pem",
+      mode   => '0640',
+    }
+  }
 }
